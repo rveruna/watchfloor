@@ -6,10 +6,14 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 
 const executablePath = process.env.CHROME_PATH || undefined;
-const MODES = [
-  { name: 'demo', dir: 'dist-demo', port: 4181 },
-  { name: 'server', dir: 'dist-server', port: 4182 },
-];
+// E2E_URL points the server-mode checks at a deployment that is already running, such as the one on Vercel
+const REMOTE = process.env.E2E_URL?.replace(/\/$/, '');
+const MODES = REMOTE
+  ? [{ name: 'remote', kind: 'server', base: REMOTE }]
+  : [
+      { name: 'demo', kind: 'demo', dir: 'dist-demo', port: 4181, base: 'http://localhost:4181' },
+      { name: 'server', kind: 'server', dir: 'dist-server', port: 4182, base: 'http://localhost:4182' },
+    ];
 
 const failures = [];
 const check = async (name, fn) => {
@@ -52,7 +56,7 @@ async function open(mode, viewport = { width: 1100, height: 900 }) {
     if (/status of 401/.test(m.text()) && expected401 > 0) return void expected401--;
     problems.push(m.text());
   });
-  await page.goto(`http://localhost:${mode.port}/`);
+  await page.goto(`${mode.base}/`);
   // the app starts by asking the deployment who is signed in, so there is nothing to look at until it has answered
   await page.getByRole('heading', { name: /Sign in|Live/ }).waitFor();
   return { page, context, problems };
@@ -90,7 +94,7 @@ async function noSideScroll(page) {
 }
 
 try {
-  await Promise.all(MODES.map((m) => waitForServer(m.port)));
+  if (!REMOTE) await Promise.all(MODES.map((m) => waitForServer(m.port)));
 
   for (const mode of MODES) {
     const t = (name) => `[${mode.name}] ${name}`;
@@ -199,7 +203,7 @@ try {
       await signInAs(page, 'operator');
       await page.getByRole('button', { name: 'Sign out' }).click();
       await page.getByRole('heading', { name: 'Sign in' }).waitFor();
-      await page.goto(`http://localhost:${mode.port}/devices`);
+      await page.goto(`${mode.base}/devices`);
       await page.getByRole('heading', { name: 'Sign in' }).waitFor();
       await context.close();
     });
@@ -208,7 +212,7 @@ try {
       const { page, context } = await open(mode);
       await signInAs(page, 'operator');
       await page.reload();
-      if (mode.name === 'server') await page.getByRole('heading', { name: 'Live' }).waitFor();
+      if (mode.kind === 'server') await page.getByRole('heading', { name: 'Live' }).waitFor();
       else await page.getByRole('heading', { name: 'Sign in' }).waitFor();
       await context.close();
     });
@@ -250,12 +254,12 @@ try {
   await check(
     '[server] the real thing is a websocket, and the sign-in cookie cannot be read by the page',
     async () => {
-      const mode = MODES[1];
+      const mode = MODES.find((m) => m.kind === 'server');
       const context = await browser.newContext();
       const page = await context.newPage();
       const sockets = [];
       page.on('websocket', (ws) => sockets.push(ws.url()));
-      await page.goto(`http://localhost:${mode.port}/`);
+      await page.goto(`${mode.base}/`);
       await signInAs(page, 'operator');
       assert.ok(
         sockets.some((u) => u.endsWith('/api/v1/stream')),
