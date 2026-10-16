@@ -19,6 +19,7 @@ npm run dev               # the demo, in your browser, no server needed
 npm run dev:all           # the app against the mock server (HTTP and a websocket)
 npm test                  # unit, store, component and server tests
 npm run e2e               # needs `npm run build:e2e` first, and Chrome or `npx playwright install chromium`
+E2E_URL=https://your-deployment npm run e2e   # the same journeys against something already running
 ```
 
 Sign in as `operator@example.com` / `operator` (can acknowledge alarms) or `viewer@example.com` / `viewer`.
