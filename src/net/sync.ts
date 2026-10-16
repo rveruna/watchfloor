@@ -18,6 +18,8 @@ export interface EventSink {
   applyLive(event: MonitorEvent): Gap | null;
   /** A page of events from a fetch. Returns any hole still left. */
   merge(events: MonitorEvent[]): Gap | null;
+  /** The server's numbering started again from the beginning, so everything held is from another run. Forget it. */
+  reset(): void;
   acknowledged(eventId: string, ack: Ack): void;
   deviceChanged(device: Device): void;
 }
@@ -47,6 +49,8 @@ export interface SyncOptions {
 }
 
 const MAX_PAGES = 100;
+/** Copies of a server can disagree by an event or two about what has happened yet. Further behind than this means it started over. */
+const RESET_MARGIN = 20;
 const DEFAULT_HEARTBEAT_MS = 10_000;
 
 const realTimers: Timers = {
@@ -196,6 +200,16 @@ export class SyncEngine {
       case 'hello':
         this.heartbeatMs = message.heartbeatMs;
         this.armWatchdog(generation);
+        if (message.lastSeq + RESET_MARGIN < this.sink.highestSeq()) {
+          this.logger.warn(
+            'the server is further behind than anything seen, so its numbering started again',
+            {
+              serverLastSeq: message.lastSeq,
+              held: this.sink.highestSeq(),
+            },
+          );
+          this.sink.reset();
+        }
         void this.catchUp(generation);
         return;
       case 'ping':

@@ -61,6 +61,11 @@ export class TestSink implements EventSink {
     this.log = result.log;
     return result.gap;
   }
+  resets = 0;
+  reset() {
+    this.resets++;
+    this.log = emptyLog();
+  }
   acknowledged(eventId: string, ack: Ack) {
     this.acks.push([eventId, ack]);
     this.log = applyAck(this.log, eventId, ack);

@@ -190,6 +190,37 @@ describe('watching the monitor', () => {
     expect(monitor.log.contiguousSeq).toBe(35);
   });
 
+  it('starts again from nothing when the server says its numbering started over', async () => {
+    // the app talks to whichever deployment `current` is, so the test can swap it for a fresh one as a restart would
+    let current = svc;
+    setServices({
+      ...svc,
+      api: new Proxy(svc.api, { get: (_target, key) => current.api[key as keyof typeof svc.api] }),
+      socketFactory: (handlers) => current.socketFactory(handlers),
+    });
+    const session = await signIn();
+    void session.init();
+    const monitor = useMonitorStore();
+    void monitor.start();
+    await flush(500);
+    expect(monitor.summary.total).toBe(30);
+
+    const fresh = createDemoServices({
+      world: new World({ seed: 7, start, preload: 3, now: () => start + 5_000 }),
+      ticker: false,
+      latencyMs: 10,
+      heartbeatMs: 1000,
+    });
+    await Promise.all([fresh.api.login('operator@example.com', 'operator'), flush(50)]);
+    current = fresh;
+    monitor.sever();
+    await flush(2_000);
+
+    expect(monitor.isLive).toBe(true);
+    expect(monitor.summary.total).toBe(3);
+    expect(monitor.log.highestSeq).toBe(3);
+  });
+
   it('forgets everything when stopped', async () => {
     const { monitor } = await live();
     monitor.stop();

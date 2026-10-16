@@ -284,6 +284,44 @@ describe('losing the connection', () => {
   });
 });
 
+describe('a server that starts its numbering again', () => {
+  it('forgets what it holds and loads afresh, instead of waiting for numbers it will never see', async () => {
+    const t = setup(range(1, 300));
+    t.engine.start();
+    await connect(t, 300);
+    expect(t.sink.log.highestSeq).toBe(300);
+
+    // the server starts over: its history is now 40 events, and the app's 300 are from the run before
+    t.store.splice(0, t.store.length, ...range(1, 40));
+    t.sockets.last.drop();
+    await vi.advanceTimersByTimeAsync(499);
+    await connect(t, 40);
+
+    expect(t.sink.resets).toBe(1);
+    expect(t.sink.log.highestSeq).toBe(40);
+    expect(t.sockets.last.sent).toEqual([{ type: 'subscribe', sinceSeq: 40 }]);
+    expect(t.logger.entries().some((e) => e.message.includes('numbering started again'))).toBe(true);
+  });
+
+  it('does not take a small difference between copies of a server for a restart', async () => {
+    const t = setup(range(1, 300));
+    t.engine.start();
+    await connect(t, 300);
+    t.sockets.last.drop();
+    await vi.advanceTimersByTimeAsync(499);
+    await connect(t, 295);
+    expect(t.sink.resets).toBe(0);
+    expect(t.sink.log.highestSeq).toBe(300);
+  });
+
+  it('is not triggered by a normal first connection', async () => {
+    const t = setup(range(1, 30));
+    t.engine.start();
+    await connect(t, 30);
+    expect(t.sink.resets).toBe(0);
+  });
+});
+
 describe('the session ending', () => {
   it('stops for good and tells the app, rather than retrying with a login that no longer works', async () => {
     const t = setup();

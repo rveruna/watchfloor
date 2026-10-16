@@ -73,6 +73,11 @@ export const useMonitorStore = defineStore('monitor', () => {
           loaded.value = true;
           return result.gap;
         },
+        reset() {
+          log.value = emptyLog();
+          loaded.value = false;
+          latestAlarm.value = null;
+        },
         acknowledged(eventId, ack) {
           log.value = applyAck(log.value, eventId, ack);
         },
