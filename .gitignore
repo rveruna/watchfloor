@@ -9,3 +9,5 @@ test-results
 .vercel
 dist-demo
 dist-server
+.vercel
+.env*
