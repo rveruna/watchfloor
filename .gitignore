@@ -11,3 +11,6 @@ dist-demo
 dist-server
 .vercel
 .env*
+.firebase
+firebase-debug.log
+firebase-debug.*.log
