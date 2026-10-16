@@ -4,7 +4,8 @@
 [![CodeQL](https://github.com/rveruna/watchfloor/actions/workflows/codeql.yml/badge.svg)](https://github.com/rveruna/watchfloor/actions/workflows/codeql.yml)
 
 **[Live demo](https://rveruna.github.io/watchfloor/)** (runs in your page; sign in with one click; the data is invented) ·
-**[The same app on a real server](https://watchfloor-silk.vercel.app/)** (Vercel: HTTP and a websocket; sign in as `operator@example.com` / `operator`)
+**[The same app on a real server](https://watchfloor-silk.vercel.app/)** (Vercel: HTTP and a websocket; sign in as `operator@example.com` / `operator`) ·
+[the demo on Firebase Hosting](https://watchfloor-rveruna.web.app/)
 
 ![The live page: summary tiles, an alarm waiting to be acknowledged, filters and a stream of events](docs/screenshot.png)
 
@@ -102,6 +103,7 @@ with a screen reader** (see [0006](docs/decisions/0006-a-live-page-people-can-us
 - **The GitHub Pages demo runs in your page**, not against a server. The Vercel one runs a real server, but its websocket
   support is a public beta, connections are cut every five minutes by design, acknowledgements are kept in an ephemeral
   cache (two operators acting at the same instant can overwrite each other), and numbering restarts every Monday.
-- **No Firebase and no Go backend.** See [0008](docs/decisions/0008-what-is-and-is-not-here.md).
+- **Firebase is only used to host the demo and publish previews** (no Auth, Firestore or Remote Config), and there is no Go backend.
+  See [0008](docs/decisions/0008-what-is-and-is-not-here.md).
 - **No screen reader or real-device testing, and no load testing.** The list draws 100 rows and the log holds 2,000 events.
 - **Nothing is sent to a collector.** The logger and the Web Vitals stay in the page.

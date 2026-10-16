@@ -16,9 +16,9 @@ Status: accepted
 
 - **It is not wired to any real product.** All the data is invented and every event comes from a seeded generator. No real
   camera, video or alarm panel is involved, and the project has no connection to any company's product or API.
-- **No Firebase.** I planned to use the Firebase emulators, but anything built on them could not run in the public demo
-  (Pages has no emulator), and I did not want a feature that only works on one laptop. Authentication is cookie sign-in against
-  the mock server instead.
+- **Firebase is used for Hosting and deploys only.** There is no Firebase Auth, Firestore, Remote Config or Analytics: sign-in
+  is a cookie against the server, events are generated, and the logger and Web Vitals stay in the page. I planned Auth against the
+  emulators, but anything built on them could not run in a public demo. See [0010](0010-firebase-hosting-and-public-previews.md).
 - **No Go backend, no database.** The server is a few hundred lines of Node and keeps everything in memory.
 - **No screen reader testing** (VoiceOver, NVDA), and no real-device testing. Axe and a keyboard run are what has been done.
 - **No load testing.** The list draws 100 rows and the log holds 2,000 events; I have not tried a stream of thousands a second.

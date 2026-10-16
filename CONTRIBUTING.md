@@ -26,8 +26,9 @@ Sign in as `operator@example.com` / `operator` (can acknowledge alarms) or `view
 
 ## Deploys
 
-Pushing to `main` publishes the in-page demo to GitHub Pages (GitHub Actions) and the real server to Vercel, which watches the
-repository. Every pull request also gets a Vercel preview, behind Vercel's own login by default.
+Pushing to `main` publishes the in-page demo to GitHub Pages and to Firebase Hosting (both GitHub Actions) and the real server to
+Vercel, which watches the repository. Every pull request gets a public Firebase preview of the demo (a link is posted on the
+pull request) and a Vercel preview of the real server, which is behind Vercel's own login by default.
 
 ## What a change needs
 
