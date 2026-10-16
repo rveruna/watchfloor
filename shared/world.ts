@@ -1,5 +1,6 @@
-import type { About, Ack, Device, EventsResponse, MonitorEvent, ServerMessage, User } from './protocol';
-import { createSimulator, DEVICES, type Simulator } from './simulator';
+import type { About, Ack, Device, EventsResponse, MonitorEvent, ServerMessage, User } from './protocol.js';
+import { authenticate } from './accounts.js';
+import { createSimulator, DEVICES, type Simulator } from './simulator.js';
 
 /**
  * Everything a deployment knows: its devices, its events, who may sign in. The mock server wraps this in HTTP and a
@@ -10,19 +11,6 @@ import { createSimulator, DEVICES, type Simulator } from './simulator';
 export const VERSION = '0.1.0';
 export const FEATURES = ['alarms', 'device-health', 'acknowledge'] as const;
 const MAX_STORED = 10_000;
-
-const ACCOUNTS = [
-  {
-    email: 'operator@example.com',
-    password: 'operator',
-    user: { name: 'Operator', role: 'operator' } satisfies User,
-  },
-  {
-    email: 'viewer@example.com',
-    password: 'viewer',
-    user: { name: 'Viewer', role: 'viewer' } satisfies User,
-  },
-];
 
 export interface WorldOptions {
   seed?: number;
@@ -54,8 +42,7 @@ export class World {
 
   /** The user for these credentials, or null. */
   authenticate(email: string, password: string): User | null {
-    const found = ACCOUNTS.find((a) => a.email === email.trim().toLowerCase() && a.password === password);
-    return found ? { ...found.user } : null;
+    return authenticate(email, password);
   }
 
   devices(): Device[] {

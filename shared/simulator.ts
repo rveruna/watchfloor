@@ -1,4 +1,4 @@
-import type { Device, MonitorEvent, Severity } from './protocol';
+import type { Device, MonitorEvent, Severity } from './protocol.js';
 
 /**
  * Invents a believable stream of events for a few sites. It is deterministic: the same seed and the same number of
