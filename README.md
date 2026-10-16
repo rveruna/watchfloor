@@ -3,7 +3,8 @@
 [![CI](https://github.com/rveruna/watchfloor/actions/workflows/ci.yml/badge.svg)](https://github.com/rveruna/watchfloor/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/rveruna/watchfloor/actions/workflows/codeql.yml/badge.svg)](https://github.com/rveruna/watchfloor/actions/workflows/codeql.yml)
 
-**[Live demo](https://rveruna.github.io/watchfloor/)** (sign in with one click; the data is invented)
+**[Live demo](https://rveruna.github.io/watchfloor/)** (runs in your page; sign in with one click; the data is invented) ·
+**[The same app on a real server](https://watchfloor-silk.vercel.app/)** (Vercel: HTTP and a websocket; sign in as `operator@example.com` / `operator`)
 
 ![The live page: summary tiles, an alarm waiting to be acknowledged, filters and a stream of events](docs/screenshot.png)
 
@@ -24,8 +25,8 @@ not connected to any real product, camera or alarm system.
 - **Reconnects on its own**, waits longer each time (with jitter), spots a connection that has gone silent, and fills any hole
   in the numbering over REST
 - **A diagnostics page**: the connection, the page's own Web Vitals, and a structured log; plus a button to cut the connection
-- **Two ways to run it**: a demo that runs entirely in the page, and a build that talks to a mock server over HTTP and a
-  websocket. The same screens, stores and engine run either way
+- **Three ways to run it**: a demo that runs entirely in the page, a build that talks to a mock server over HTTP and a
+  websocket, and the same server code on Vercel, where copies share no memory. The same screens, stores and engine run each way
 
 ## Run it
 
@@ -33,10 +34,11 @@ not connected to any real product, camera or alarm system.
 npm install
 npm run dev               # the demo, no server needed
 npm run dev:all           # the app against the mock server (HTTP + websocket)
-npm test                  # 257 tests
+npm test                  # 311 tests
 npm run test:coverage
 npm run arch              # the code's shape, as rules
 npm run build:e2e && npm run e2e   # both modes in Chrome, with axe (29 checks)
+E2E_URL=https://watchfloor-silk.vercel.app npm run e2e   # the same journeys against a live deployment
 ```
 
 Sign in as `operator@example.com` / `operator` (can acknowledge) or `viewer@example.com` / `viewer`.
@@ -45,7 +47,8 @@ Sign in as `operator@example.com` / `operator` (can acknowledge) or `viewer@exam
 
 ```
 shared/       the contract (Zod schemas), a seeded event generator, and the simulated deployment (World)
-server/       the mock deployment: HTTP, cookie sign-in, a websocket
+server/       the routes and websocket (core), and the deployments behind them: in memory (mock) or from the clock (Vercel)
+api/          the Vercel function, which is the same server
 src/domain/   the rules as pure functions: event log, connection state machine, retry waits, filters
 src/net/      REST client, sockets, the sync engine (the only place with timers), the in-page demo
 src/stores/   Pinia: session, monitor (events, devices, acknowledging), telemetry
@@ -63,19 +66,23 @@ docs/decisions/   the reasoning behind the main choices
   ([0004](docs/decisions/0004-one-world-two-front-doors.md)).
 - **The architecture is enforced**: a wrong import fails the build
   ([0005](docs/decisions/0005-architecture-as-rules.md)).
+- **Running where copies share no memory**: events from the clock, signed cookies, acknowledgements in a shared cache, and a
+  connection that is expected to be cut every five minutes ([0009](docs/decisions/0009-running-on-vercel-without-shared-memory.md)).
 - **A page that changes by itself, made usable** ([0006](docs/decisions/0006-a-live-page-people-can-use.md)) and
   **seen in production** ([0007](docs/decisions/0007-seeing-the-frontend-in-production.md)).
 
 ## Practices
 
-- **257 tests, 98% of statements and 94% of branches**: the rules, the engine against fake timers and sockets, the stores against
-  the real demo, the whole app through its screens, and the server and the engine together over real HTTP and websockets
+- **311 tests, 98% of statements and 94% of branches**: the rules, the engine against fake timers and sockets, the stores against
+  the real demo, the whole app through its screens, and the server and the engine together over real HTTP and websockets,
+  including two server copies that share nothing but a secret and a store
 - **Property tests** (fast-check): any order and any repeats of events give the same log with no hole; retry waits stay in bounds
-- **Hand-made mutants** of the event log, state machine, engine, client, world and server (30, checked once locally): the first
-  pass missed five. Four became tests (a single missing event, a page that ends exactly at the hole, the largest allowed
-  limit, a newest event that was let go and fetched again). The fifth, a redundant folder check in the static server, is
-  equivalent, because the path is already normalised
-- **Browser run of both modes, 29 checks**, with axe (WCAG 2.2 AA and best-practice rules) on every page at phone, small phone,
+- **Hand-made mutants** of the event log, state machine, engine, client, world and servers (47, checked locally in two
+  rounds): the first pass of each round missed some, which became tests (a single missing event, a page that ends exactly at
+  the hole, the largest allowed limit, an event happening at exactly this moment, a token with something added after its
+  signature). Two survivors are equivalent to the original: a redundant folder check in the static server and a duplicate
+  "already known" check
+- **Browser run of both modes, 29 checks, and the same journeys against the live Vercel deployment (15)**, with axe (WCAG 2.2 AA and best-practice rules) on every page at phone, small phone,
   tablet and desktop widths, and no sideways scroll. The run found real problems: a "no alarms" message shown before the first
   events arrived, a sign-in form whose error message became part of the field's name, and tables that scrolled the page at 320 px
 - **CI**: lint (no warnings), formatting, types, architecture rules, coverage, build, the browser run, and a dependency audit
@@ -92,7 +99,9 @@ with a screen reader** (see [0006](docs/decisions/0006-a-live-page-people-can-us
 
 - **Everything is invented and simulated.** The server is a few hundred lines of Node that keeps everything in memory. There
   is no database, no real device, no video, and no connection to any product.
-- **The public demo runs in your page**, not against a server. Run `npm run dev:all` for the server version.
+- **The GitHub Pages demo runs in your page**, not against a server. The Vercel one runs a real server, but its websocket
+  support is a public beta, connections are cut every five minutes by design, acknowledgements are kept in an ephemeral
+  cache (two operators acting at the same instant can overwrite each other), and numbering restarts every Monday.
 - **No Firebase and no Go backend.** See [0008](docs/decisions/0008-what-is-and-is-not-here.md).
 - **No screen reader or real-device testing, and no load testing.** The list draws 100 rows and the log holds 2,000 events.
 - **Nothing is sent to a collector.** The logger and the Web Vitals stay in the page.

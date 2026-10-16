@@ -22,4 +22,6 @@ Status: accepted
 - **No Go backend, no database.** The server is a few hundred lines of Node and keeps everything in memory.
 - **No screen reader testing** (VoiceOver, NVDA), and no real-device testing. Axe and a keyboard run are what has been done.
 - **No load testing.** The list draws 100 rows and the log holds 2,000 events; I have not tried a stream of thousands a second.
-- **Not deployed anywhere but GitHub Pages**, and the Pages build is the in-page demo.
+- **Two deployments, one fully simulated.** GitHub Pages runs the in-page demo. Vercel runs the real server code (HTTP and a
+  websocket, see [0009](0009-running-on-vercel-without-shared-memory.md)), but its events are still invented and its
+  acknowledgements live in an ephemeral cache.
