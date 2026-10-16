@@ -24,6 +24,11 @@ E2E_URL=https://your-deployment npm run e2e   # the same journeys against someth
 
 Sign in as `operator@example.com` / `operator` (can acknowledge alarms) or `viewer@example.com` / `viewer`.
 
+## Deploys
+
+Pushing to `main` publishes the in-page demo to GitHub Pages (GitHub Actions) and the real server to Vercel, which watches the
+repository. Every pull request also gets a Vercel preview, behind Vercel's own login by default.
+
 ## What a change needs
 
 - A test that fails without it. If the change is a bug fix, the test should fail on the old code first.
