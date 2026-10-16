@@ -7,6 +7,10 @@ updates:
     groups:
       development:
         dependency-type: development
+    ignore:
+      # TypeScript 7 is not supported by typescript-eslint yet (npm ci fails on the peer dependency)
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
