@@ -9,7 +9,7 @@
   "dependencies": {
     "@vercel/functions": "^3.10.1",
     "pinia": "^4.1.0",
-    "vue": "^3.5.44",
+    "vue": "^3.5.45",
     "vue-router": "^5.4.0",
     "web-vitals": "^6.2.3",
     "ws": "^8.22.0",
