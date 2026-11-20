@@ -10,7 +10,7 @@
     "@vercel/functions": "^3.10.1",
     "pinia": "^4.1.0",
     "vue": "^3.5.44",
-    "vue-router": "^5.4.0",
+    "vue-router": "^5.5.1",
     "web-vitals": "^6.2.3",
     "ws": "^8.22.0",
     "zod": "^4.6.7"
